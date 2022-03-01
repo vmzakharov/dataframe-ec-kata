@@ -15,7 +15,7 @@ final public class DataFrameUtil
     {
 
         Assertions.assertTrue(
-                expected.rowCount() != actual.rowCount() || expected.columnCount() != actual.columnCount(),
+                expected.rowCount() == actual.rowCount() && expected.columnCount() == actual.columnCount(),
                 "Dimensions don't match: expected rows " + expected.rowCount() + ", cols " + expected.columnCount()
                     + ", actual rows " + actual.rowCount() + ", cols " + actual.columnCount());
 

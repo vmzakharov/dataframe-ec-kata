@@ -1,6 +1,10 @@
 package io.github.vmzakharov.ecdataframekata.donutshop;
 
+import io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction;
 import io.github.vmzakharov.ecdataframe.dataframe.DataFrame;
+import org.eclipse.collections.api.factory.Lists;
+
+import java.time.LocalDate;
 
 public class DonutShop
 {
@@ -47,5 +51,18 @@ public class DonutShop
     public void setOrders(DataFrame newOrders)
     {
         this.orders = newOrders;
+    }
+
+    public DataFrame getDonutPriceStatistics(LocalDate fromDate, LocalDate toDate)
+    {
+        return this.getOrders()
+            .selectBy("DeliveryDate >= toDate('" + fromDate + "') and DeliveryDate <= toDate('" + toDate + "')")
+            .aggregate(Lists.immutable.of(
+                AggregateFunction.sum("TotalPrice", "Sum"),
+                AggregateFunction.avg("TotalPrice", "Avg"),
+                AggregateFunction.sum("Count", "Count"),
+                AggregateFunction.min("TotalPrice", "Min"),
+                AggregateFunction.max("TotalPrice", "Max"))
+            );
     }
 }

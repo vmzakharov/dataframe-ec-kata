@@ -1,7 +1,9 @@
 package io.github.vmzakharov.ecdataframekata.donutshop;
 
+import io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction;
 import io.github.vmzakharov.ecdataframe.dataframe.DataFrame;
 import io.github.vmzakharov.ecdataframe.dataframe.DfJoin;
+import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.junit.jupiter.api.Assertions;
@@ -37,20 +39,20 @@ public class DonutShopTest
 
         this.donutShop.setMenu(
                 new DataFrame("Menu")
-                    .addStringColumn("Code").addStringColumn("Type").addDoubleColumn("Price").addDoubleColumn("DiscountPrice")
-                    .addRow("BB", "BLUEBERRY", 1.75, 1.50)
-                    .addRow("GL", "GLAZED", 1.50, 1.25)
-                    .addRow("OF", "OLD_FASHIONED", 1.50, 1.25)
-                    .addRow("PS", "PUMPKIN_SPICE", 1.75, 1.50)
-                    .addRow("JL",  "JELLY", 1.75, 1.50)
-                    .addRow("AC", "APPLE_CIDER", 1.50, 1.25)
+                    .addStringColumn("Code").addStringColumn("Description").addDoubleColumn("Price").addDoubleColumn("DiscountPrice")
+                    .addRow("BB", "Blueberry", 1.75, 1.50)
+                    .addRow("GL", "Glazed", 1.50, 1.25)
+                    .addRow("OF", "Old Fashioned", 1.50, 1.25)
+                    .addRow("PS", "Pumpkin Spice", 1.75, 1.50)
+                    .addRow("JL", "Jelly", 1.75, 1.50)
+                    .addRow("AC", "Apple Cider", 1.50, 1.25)
         );
 
         this.donutShop.setOrders(
                 new DataFrame("Orders")
-                    .addLongColumn("CustomerId").addDateColumn("Date").addStringColumn("DonutCode").addLongColumn("Count")
+                    .addLongColumn("CustomerId").addDateColumn("DeliveryDate").addStringColumn("DonutCode").addLongColumn("Count")
                     .addRow(1, this.today, "BB", 2)
-                    .addRow(1, this.today, "GL", 2)
+                    .addRow(1, this.today, "GL", 4)
                     .addRow(1, this.today, "OF", 10)
 
                     .addRow(2, this.yesterday, "BB", 12)
@@ -70,47 +72,101 @@ public class DonutShopTest
     public void totalSpendPerCustomer()
     {
         this.donutShop.getOrders().lookup(DfJoin
-                    .to(this.donutShop.getMenu())
-                    .match("DonutCode", "Code")
-                    .select(Lists.immutable.of("Price", "DiscountPrice"))
+                .to(this.donutShop.getMenu())
+                .match("DonutCode", "Code")
+                .select(Lists.immutable.of("Price", "DiscountPrice"))
         );
 
-        this.donutShop.getOrders()
-              .addDoubleColumn("Total", "(Count < 10 ? Price : DiscountPrice)  * Count");
+        this.donutShop.getOrders().addDoubleColumn("TotalPrice", "(Count < 10 ? Price : DiscountPrice)  * Count");
 
         System.out.println(this.donutShop.getOrders().asCsvString());
 
         var spendByCustomer =
-                this.donutShop.getOrders().sumBy(Lists.immutable.of("Total"), Lists.immutable.of("CustomerId"));
+                this.donutShop.getOrders().sumBy(Lists.immutable.of("TotalPrice"), Lists.immutable.of("CustomerId"));
 
         System.out.println(spendByCustomer.asCsvString());
 
-        spendByCustomer.sortByExpression("-Total");
+        spendByCustomer.sortByExpression("-TotalPrice");
         spendByCustomer.lookup(DfJoin
-                        .to(this.donutShop.getCustomers())
-                        .match("CustomerId", "Id")
-                        .select("Name")
+                .to(this.donutShop.getCustomers())
+                .match("CustomerId", "Id")
+                .select("Name")
         );
 
         System.out.println(spendByCustomer.asCsvString());
         System.out.println(spendByCustomer.getString("Name", 0));
 
-        var tomorrowsOrders = this.donutShop.getOrders().selectBy("Date == toDate('" + this.tomorrow + "')");
+        var tomorrowsOrders = this.donutShop.getOrders().selectBy("DeliveryDate == toDate('" + this.tomorrow + "')");
         System.out.println(tomorrowsOrders.asCsvString());
         // customer names for delivery tomorrow
 
         Assertions.assertEquals(
                 Sets.mutable.of("Carol", "Dave"),
                 tomorrowsOrders.lookup(DfJoin
-                    .to(this.donutShop.getCustomers())
-                    .match("CustomerId", "Id")
-                    .select("Name")
+                        .to(this.donutShop.getCustomers())
+                        .match("CustomerId", "Id")
+                        .select("Name")
                 ).getStringColumn("Name").toList().toSet());
+
+        // statistics by delivery date range - sum, avg, etc.
+        // var donutDeliveryStatistics = this.donutShop.getStatistics.
     }
 
     @Test
-    public void totalPriceForEachOrder()
+    public void donutPriceStatistics()
     {
+        this.donutShop.getOrders().lookup(DfJoin
+                .to(this.donutShop.getMenu())
+                .match("DonutCode", "Code")
+                .select(Lists.immutable.of("Price", "DiscountPrice"))
+        );
 
+        this.donutShop.getOrders().addDoubleColumn("TotalPrice", "(Count < 10 ? Price : DiscountPrice)  * Count");
+
+        DataFrame statistics;
+
+        statistics = this.donutShop.getDonutPriceStatistics(this.yesterday, this.yesterday);
+        System.out.println(statistics.asCsvString());
+
+        statistics = this.donutShop.getDonutPriceStatistics(this.today, this.today);
+        System.out.println(statistics.asCsvString());
+
+        statistics = this.donutShop.getDonutPriceStatistics(this.tomorrow, this.tomorrow);
+        System.out.println(statistics.asCsvString());
+
+        DataFrameUtil.assertEquals(
+                new DataFrame("Expected")
+                        .addDoubleColumn("Sum").addDoubleColumn("Avg").addLongColumn("Count")
+                        .addDoubleColumn("Min").addDoubleColumn("Max")
+                        .addRow(122.5, 11.136363636363637, 86, 3.5, 18.0),
+                this.donutShop.getDonutPriceStatistics(this.yesterday, this.tomorrow));
+    }
+
+    @Test
+    public void donutsInPopularityOrder()
+    {
+        // TODO - create a data frame that contains donut kinds (descriptions) and the number of donuts delivered,
+        //        the data frame should be ordered by the number of donuts value in the descending order
+
+        var donutCountByCode = this.donutShop.getOrders().sumBy(Lists.immutable.of("Count"), Lists.immutable.of("DonutCode"));
+
+        var popularity = donutCountByCode.lookup(DfJoin
+                .to(this.donutShop.getMenu())
+                .match("DonutCode", "Code")
+                .select("Description")
+        );
+
+        popularity.dropColumn("DonutCode").sortByExpression("-Count");
+
+        DataFrameUtil.assertEquals(
+                new DataFrame("Expected")
+                    .addLongColumn("Count").addStringColumn("Description")
+                    .addRow(40, "Old Fashioned")
+                    .addRow(26, "Blueberry")
+                    .addRow(14, "Pumpkin Spice")
+                    .addRow(4, "Glazed")
+                    .addRow(2, "Jelly"),
+                popularity
+        );
     }
 }
