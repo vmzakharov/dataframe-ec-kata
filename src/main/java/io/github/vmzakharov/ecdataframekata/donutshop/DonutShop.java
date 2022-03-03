@@ -1,14 +1,19 @@
 package io.github.vmzakharov.ecdataframekata.donutshop;
 
-import io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction;
 import io.github.vmzakharov.ecdataframe.dataframe.DataFrame;
+import io.github.vmzakharov.ecdataframe.dataframe.DfJoin;
 import org.eclipse.collections.api.factory.Lists;
 
 import java.time.LocalDate;
 
+import static io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction.avg;
+import static io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction.count;
+import static io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction.max;
+import static io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction.min;
+import static io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction.sum;
+
 public class DonutShop
 {
-    private DataFrame inventory;
     private DataFrame orders;
     private DataFrame customers;
     private DataFrame menu;
@@ -33,16 +38,6 @@ public class DonutShop
         return this.menu;
     }
 
-    public DataFrame getInventory()
-    {
-        return this.inventory;
-    }
-
-    public void setInventory(DataFrame newInventory)
-    {
-        this.inventory = newInventory;
-    }
-
     public DataFrame getOrders()
     {
         return this.orders;
@@ -53,16 +48,32 @@ public class DonutShop
         this.orders = newOrders;
     }
 
-    public DataFrame getDonutPriceStatistics(LocalDate fromDate, LocalDate toDate)
+    public DataFrame getDonutOrderPriceStatistics(LocalDate fromDate, LocalDate toDate)
     {
-        return this.getOrders()
+        return this.getOrdersWithPrices()
             .selectBy("DeliveryDate >= toDate('" + fromDate + "') and DeliveryDate <= toDate('" + toDate + "')")
             .aggregate(Lists.immutable.of(
-                AggregateFunction.sum("TotalPrice", "Sum"),
-                AggregateFunction.avg("TotalPrice", "Avg"),
-                AggregateFunction.sum("Count", "Count"),
-                AggregateFunction.min("TotalPrice", "Min"),
-                AggregateFunction.max("TotalPrice", "Max"))
+                sum("TotalPrice"),
+                avg("TotalPrice", "Average Price"),
+                count("TotalPrice", "Order Count"),
+                min("TotalPrice", "Min Price"),
+                max("TotalPrice", "Max Price"))
             );
+    }
+
+    public DataFrame getOrdersWithPrices()
+    {
+        if (!this.orders.hasColumn("TotalPrice"))
+        {
+            this.orders.lookup(DfJoin
+                    .to(this.menu)
+                    .match("DonutCode", "Code")
+                    .select(Lists.immutable.of("Price", "DiscountPrice"))
+            );
+
+            this.orders.addDoubleColumn("TotalPrice", "(Count < 10 ? Price : DiscountPrice)  * Count");
+        }
+
+        return this.orders;
     }
 }

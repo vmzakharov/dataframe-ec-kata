@@ -1,6 +1,5 @@
 package io.github.vmzakharov.ecdataframekata.donutshop;
 
-import io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction;
 import io.github.vmzakharov.ecdataframe.dataframe.DataFrame;
 import io.github.vmzakharov.ecdataframe.dataframe.DfJoin;
 import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
@@ -15,6 +14,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class DonutShopTest
 {
     private final Clock clock = Clock.fixed(Instant.now(), ZoneOffset.UTC);
@@ -28,61 +29,54 @@ public class DonutShopTest
     public void setup()
     {
         this.donutShop = new DonutShop();
-        this.donutShop.setCustomers(
-                new DataFrame("Customers")
-                    .addLongColumn("Id").addStringColumn("Name")
-                    .addRow(1, "Alice")
-                    .addRow(2, "Bob")
-                    .addRow(3, "Carol")
-                    .addRow(4, "Dave")
+
+        this.donutShop.setCustomers(new DataFrame("Customers")
+            .addLongColumn("Id").addStringColumn("Name")
+            .addRow(1, "Alice")
+            .addRow(2, "Bob")
+            .addRow(3, "Carol")
+            .addRow(4, "Dave")
         );
 
-        this.donutShop.setMenu(
-                new DataFrame("Menu")
-                    .addStringColumn("Code").addStringColumn("Description").addDoubleColumn("Price").addDoubleColumn("DiscountPrice")
-                    .addRow("BB", "Blueberry", 1.75, 1.50)
-                    .addRow("GL", "Glazed", 1.50, 1.25)
-                    .addRow("OF", "Old Fashioned", 1.50, 1.25)
-                    .addRow("PS", "Pumpkin Spice", 1.75, 1.50)
-                    .addRow("JL", "Jelly", 1.75, 1.50)
-                    .addRow("AC", "Apple Cider", 1.50, 1.25)
+        this.donutShop.setMenu(new DataFrame("Menu")
+            .addStringColumn("Code").addStringColumn("Description").addDoubleColumn("Price").addDoubleColumn("DiscountPrice")
+            .addRow("BB", "Blueberry", 2.00, 1.75)
+            .addRow("GL", "Glazed", 1.50, 1.25)
+            .addRow("OF", "Old Fashioned", 1.50, 1.25)
+            .addRow("PS", "Pumpkin Spice", 2.00, 1.75)
+            .addRow("JL", "Jelly", 2.00, 1.75)
+            .addRow("AC", "Apple Cider", 1.50, 1.25)
         );
 
-        this.donutShop.setOrders(
-                new DataFrame("Orders")
-                    .addLongColumn("CustomerId").addDateColumn("DeliveryDate").addStringColumn("DonutCode").addLongColumn("Count")
-                    .addRow(1, this.today, "BB", 2)
-                    .addRow(1, this.today, "GL", 4)
-                    .addRow(1, this.today, "OF", 10)
+        this.donutShop.setOrders(new DataFrame("Orders")
+            .addLongColumn("CustomerId").addDateColumn("DeliveryDate").addStringColumn("DonutCode").addLongColumn("Count")
+            .addRow(1, this.today, "BB", 2)
+            .addRow(1, this.today, "GL", 4)
+            .addRow(1, this.today, "OF", 10)
 
-                    .addRow(2, this.yesterday, "BB", 12)
-                    .addRow(2, this.today, "PS", 12)
+            .addRow(2, this.yesterday, "BB", 12)
+            .addRow(2, this.today, "PS", 12)
 
-                    .addRow(3, this.yesterday, "JL", 2)
-                    .addRow(3, this.tomorrow, "OF", 8)
-                    .addRow(3, this.tomorrow, "BB", 12)
+            .addRow(3, this.yesterday, "OF", 1)
+            .addRow(3, this.yesterday, "JL", 2)
+            .addRow(3, this.tomorrow, "OF", 10)
+            .addRow(3, this.tomorrow, "GL",  1)
+            .addRow(3, this.tomorrow, "BB", 12)
 
-                    .addRow(4, this.yesterday, "PS", 2)
-                    .addRow(4, this.today, "OF", 12)
-                    .addRow(4, this.tomorrow, "OF", 10)
+            .addRow(4, this.yesterday, "PS", 2)
+            .addRow(4, this.today, "OF", 12)
+            .addRow(4, this.tomorrow, "OF", 10)
         );
     }
 
     @Test
     public void totalSpendPerCustomer()
     {
-        this.donutShop.getOrders().lookup(DfJoin
-                .to(this.donutShop.getMenu())
-                .match("DonutCode", "Code")
-                .select(Lists.immutable.of("Price", "DiscountPrice"))
-        );
+        System.out.println(this.donutShop.getOrdersWithPrices().asCsvString());
 
-        this.donutShop.getOrders().addDoubleColumn("TotalPrice", "(Count < 10 ? Price : DiscountPrice)  * Count");
-
-        System.out.println(this.donutShop.getOrders().asCsvString());
-
-        var spendByCustomer =
-                this.donutShop.getOrders().sumBy(Lists.immutable.of("TotalPrice"), Lists.immutable.of("CustomerId"));
+        var spendByCustomer = this.donutShop
+                        .getOrdersWithPrices()
+                        .sumBy(Lists.immutable.of("TotalPrice"), Lists.immutable.of("CustomerId"));
 
         System.out.println(spendByCustomer.asCsvString());
 
@@ -100,7 +94,7 @@ public class DonutShopTest
         System.out.println(tomorrowsOrders.asCsvString());
         // customer names for delivery tomorrow
 
-        Assertions.assertEquals(
+        assertEquals(
                 Sets.mutable.of("Carol", "Dave"),
                 tomorrowsOrders.lookup(DfJoin
                         .to(this.donutShop.getCustomers())
@@ -115,31 +109,37 @@ public class DonutShopTest
     @Test
     public void donutPriceStatistics()
     {
-        this.donutShop.getOrders().lookup(DfJoin
-                .to(this.donutShop.getMenu())
-                .match("DonutCode", "Code")
-                .select(Lists.immutable.of("Price", "DiscountPrice"))
-        );
+        var statistics1= this.donutShop.getDonutOrderPriceStatistics(this.yesterday, this.yesterday);
 
-        this.donutShop.getOrders().addDoubleColumn("TotalPrice", "(Count < 10 ? Price : DiscountPrice)  * Count");
+        assertEquals(30.5,  statistics1.getDouble("TotalPrice", 0));
+        assertEquals(7.625, statistics1.getDouble("Average Price", 0));
+        assertEquals(4,     statistics1.getLong("Order Count", 0));
+        assertEquals(1.5,   statistics1.getDouble("Min Price", 0));
+        assertEquals(21.0,  statistics1.getDouble("Max Price", 0));
 
-        DataFrame statistics;
+        var statistics2 = this.donutShop.getDonutOrderPriceStatistics(this.today, this.today);
 
-        statistics = this.donutShop.getDonutPriceStatistics(this.yesterday, this.yesterday);
-        System.out.println(statistics.asCsvString());
+        assertEquals(58.5, statistics2.getDouble("TotalPrice", 0));
+        assertEquals(11.7, statistics2.getDouble("Average Price", 0));
+        assertEquals(5,    statistics2.getLong("Order Count", 0));
+        assertEquals(4.0,  statistics2.getDouble("Min Price", 0));
+        assertEquals(21.0, statistics2.getDouble("Max Price", 0));
 
-        statistics = this.donutShop.getDonutPriceStatistics(this.today, this.today);
-        System.out.println(statistics.asCsvString());
+        var statistics3 = this.donutShop.getDonutOrderPriceStatistics(this.tomorrow, this.tomorrow);
 
-        statistics = this.donutShop.getDonutPriceStatistics(this.tomorrow, this.tomorrow);
-        System.out.println(statistics.asCsvString());
+        assertEquals(47.5,   statistics3.getDouble("TotalPrice", 0));
+        assertEquals(11.875, statistics3.getDouble("Average Price", 0));
+        assertEquals(4,      statistics3.getLong("Order Count", 0));
+        assertEquals(1.5,    statistics3.getDouble("Min Price", 0));
+        assertEquals(21.0,   statistics3.getDouble("Max Price", 0));
 
-        DataFrameUtil.assertEquals(
-                new DataFrame("Expected")
-                        .addDoubleColumn("Sum").addDoubleColumn("Avg").addLongColumn("Count")
-                        .addDoubleColumn("Min").addDoubleColumn("Max")
-                        .addRow(122.5, 11.136363636363637, 86, 3.5, 18.0),
-                this.donutShop.getDonutPriceStatistics(this.yesterday, this.tomorrow));
+        var statistics4 = this.donutShop.getDonutOrderPriceStatistics(this.yesterday, this.tomorrow);
+
+        assertEquals(136.5, statistics4.getDouble("TotalPrice", 0));
+        assertEquals(10.5,  statistics4.getDouble("Average Price", 0));
+        assertEquals(13,    statistics4.getLong("Order Count", 0));
+        assertEquals(1.5,   statistics4.getDouble("Min Price", 0));
+        assertEquals(21.0,  statistics4.getDouble("Max Price", 0));
     }
 
     @Test
@@ -161,10 +161,10 @@ public class DonutShopTest
         DataFrameUtil.assertEquals(
                 new DataFrame("Expected")
                     .addLongColumn("Count").addStringColumn("Description")
-                    .addRow(40, "Old Fashioned")
+                    .addRow(43, "Old Fashioned")
                     .addRow(26, "Blueberry")
                     .addRow(14, "Pumpkin Spice")
-                    .addRow(4, "Glazed")
+                    .addRow(5, "Glazed")
                     .addRow(2, "Jelly"),
                 popularity
         );
