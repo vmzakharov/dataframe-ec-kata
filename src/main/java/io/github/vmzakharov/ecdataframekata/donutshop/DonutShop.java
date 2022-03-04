@@ -50,6 +50,16 @@ public class DonutShop
 
     public DataFrame getDonutOrderPriceStatistics(LocalDate fromDate, LocalDate toDate)
     {
+        // TODO - Calculate the statistics fpr the deliveries for inclusive of the specified date range.
+        //  For orders with the deliveries withing the range calculate the following statistics:
+        //   * TotalPrice
+        //   * Average Price
+        //   * Order Count
+        //   * Min Price
+        //   * Max Price
+        //
+        //  Hint: Look at selectBy(), aggregate() and the AggregateFunction class
+
         return this.getOrdersWithPrices()
             .selectBy("DeliveryDate >= toDate('" + fromDate + "') and DeliveryDate <= toDate('" + toDate + "')")
             .aggregate(Lists.immutable.of(
