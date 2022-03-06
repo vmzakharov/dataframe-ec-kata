@@ -1,11 +1,10 @@
 package io.github.vmzakharov.ecdataframekata.donutshop;
 
-import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
 import io.github.vmzakharov.ecdataframe.dataframe.DataFrame;
 import io.github.vmzakharov.ecdataframe.dataframe.DfJoin;
+import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
-import org.eclipse.collections.api.set.SetIterable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +13,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DonutShopTest
 {
@@ -115,10 +114,14 @@ public class DonutShopTest
         //  customer data frame to select the ones with ids matching the ones selected, then you can get the values of
         //  the name column from the filtered data frame
         //
+        var tomorrowsOrders = this.donutShop.getOrders().selectBy("DeliveryDate == toDate('" + this.tomorrow + "')");
 
-        var tomorrowsOrders = this.donutShop.getOrders();
-
-        SetIterable<String> customersToDeliverToTomorrow = null;
+        var customersToDeliverToTomorrow =
+            tomorrowsOrders.lookup(DfJoin
+                .to(this.donutShop.getCustomers())
+                .match("CustomerId", "Id")
+                .select("Name")
+        ).getStringColumn("Name").toList().toSet();
 
         assertEquals(Sets.mutable.of("Carol", "Dave"), customersToDeliverToTomorrow);
     }

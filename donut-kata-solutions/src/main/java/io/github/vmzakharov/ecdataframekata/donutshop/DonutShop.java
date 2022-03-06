@@ -58,10 +58,17 @@ public class DonutShop
         //   * Min Price
         //   * Max Price
         //
-        // Hint: Look at the selectBy(), aggregate() methods and the AggregateFunction class
-        // the expression DSL has a built-in toDate() function that may be used inline date parameters in the expression
+        // Hint: Look at selectBy(), aggregate() and the AggregateFunction class
 
-        return null;
+        return this.getOrdersWithPrices()
+            .selectBy("DeliveryDate >= toDate('" + fromDate + "') and DeliveryDate <= toDate('" + toDate + "')")
+            .aggregate(Lists.immutable.of(
+                sum("TotalPrice"),
+                avg("TotalPrice", "Average Price"),
+                count("TotalPrice", "Order Count"),
+                min("TotalPrice", "Min Price"),
+                max("TotalPrice", "Max Price"))
+            );
     }
 
     public DataFrame getOrdersWithPrices()
@@ -77,6 +84,17 @@ public class DonutShop
         // It is possible that this method will be called more than once so use the hasColumn() method to check if
         // calculated column has been added yet.
 
-        return null;
+        if (!this.orders.hasColumn("TotalPrice"))
+        {
+            this.orders.lookup(DfJoin
+                    .to(this.menu)
+                    .match("DonutCode", "Code")
+                    .select(Lists.immutable.of("Price", "DiscountPrice"))
+            );
+
+            this.orders.addDoubleColumn("TotalPrice", "(Count < 10 ? Price : DiscountPrice) * Count");
+        }
+
+        return this.orders;
     }
 }
