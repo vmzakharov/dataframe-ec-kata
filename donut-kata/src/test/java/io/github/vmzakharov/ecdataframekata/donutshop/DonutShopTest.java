@@ -1,11 +1,10 @@
 package io.github.vmzakharov.ecdataframekata.donutshop;
 
+import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
 import io.github.vmzakharov.ecdataframe.dataframe.DataFrame;
 import io.github.vmzakharov.ecdataframe.dataframe.DfJoin;
-import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

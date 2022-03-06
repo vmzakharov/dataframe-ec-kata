@@ -7,6 +7,10 @@
     <groupId>io.github.vmzakharov</groupId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>donut-kata-solutions</module>
+        <module>donut-kata</module>
+    </modules>
     <artifactId>dataframe-ec-kata</artifactId>
 
     <name>EC Data Frame Code Kata</name>
