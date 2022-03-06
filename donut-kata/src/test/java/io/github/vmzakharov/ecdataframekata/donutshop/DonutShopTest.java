@@ -71,8 +71,8 @@ public class DonutShopTest
     @Test
     public void totalSpendPerCustomer()
     {
-        // TODO - find total spend per customer. Create a data frame containing two columns: total price of all of their
-        //  orders and name of each customer
+        // TODO - find the total spend per customer. Create a data frame containing one row per each customer with two
+        //  columns: total price of all of their orders and the customer's name
 
         var spendByCustomer = this.donutShop
                 .getOrdersWithPrices()
