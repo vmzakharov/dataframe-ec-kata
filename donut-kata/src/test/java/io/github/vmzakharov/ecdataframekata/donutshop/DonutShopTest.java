@@ -107,13 +107,13 @@ public class DonutShopTest
         //
         //  Hint: see selectBy() to filter orders matching a specific criteria
         //  To get enrich the order data frame with customer names from the customers data frame joining by customer id.
-        //  Then you can use toList() method on the name column to get a collection of names.
+        //  Then you can use toList() method on the column containing names to get a collection of names.
+        //  To access this method see the get[Type]Column() methods on the DataFrame class.
+        //  Note that the same person can have more than one order for the same day so mind the duplicates.
         //
-        //  Also not the get[Type]Column() methods on DataFrame class
-        //
-        //  Alternatively, you can try finding the relevant customer ids in the order table and filter rows in the
-        //  customer data frame to select the ones with ids matching the ones selected, then you can get the values of
-        //  the name column from the filtered data frame
+        //  Alternatively, you can try finding the relevant customer ids in the data frame containing tomorrow's orders
+        //  You then can filter rows in the customer data frame to only select the ones with ids matching those found in
+        //  the previous state, then you can get the values of the Name column from the resulting (filtered) data frame
         //
 
         var tomorrowsOrders = this.donutShop.getOrders();
@@ -164,16 +164,14 @@ public class DonutShopTest
     {
         // TODO - create a data frame that contains donut kinds (descriptions) and the number of donuts delivered,
         //        the data frame should be ordered by the number of donuts value in the descending order
+        //
+        // Hint - to add up donut counts look at the sumBy() method that takes two parameters - the columns to group by
+        // and the columns to sum
+        // use the lookup() method to add donut descriptions to the aggregated dataframe
+        // to get rid of the columns you don't need look at the dropColumn() method
+        // sortBy() or sorByExpression() method can come in handy when ordering a data frame
 
-        var donutCountByCode = this.donutShop.getOrders().sumBy(Lists.immutable.of("Count"), Lists.immutable.of("DonutCode"));
-
-        var popularity = donutCountByCode.lookup(DfJoin
-                .to(this.donutShop.getMenu())
-                .match("DonutCode", "Code")
-                .select("Description")
-        );
-
-        popularity.dropColumn("DonutCode").sortByExpression("-Count");
+        DataFrame popularity = null;
 
         DataFrameUtil.assertEquals(new DataFrame("Expected")
                         .addLongColumn("Count").addStringColumn("Description")

@@ -102,18 +102,8 @@ public class DonutShopTest
     @Test
     public void customersWithDeliveriesTomorrow()
     {
-        // TODO - find the names of the customers with the deliveries scheduled for tomorrow
-        //
-        //  Hint: see selectBy() to filter orders matching a specific criteria
-        //  To get enrich the order data frame with customer names from the customers data frame joining by customer id.
-        //  Then you can use toList() method on the name column to get a collection of names.
-        //
-        //  Also not the get[Type]Column() methods on DataFrame class
-        //
-        //  Alternatively, you can try finding the relevant customer ids in the order table and filter rows in the
-        //  customer data frame to select the ones with ids matching the ones selected, then you can get the values of
-        //  the name column from the filtered data frame
-        //
+        // One way:
+
         var tomorrowsOrders = this.donutShop.getOrders().selectBy("DeliveryDate == toDate('" + this.tomorrow + "')");
 
         var customersToDeliverToTomorrow =
@@ -123,7 +113,18 @@ public class DonutShopTest
                 .select("Name")
         ).getStringColumn("Name").toList().toSet();
 
-        assertEquals(Sets.mutable.of("Carol", "Dave"), customersToDeliverToTomorrow);
+        assertEquals(Sets.immutable.of("Carol", "Dave"), customersToDeliverToTomorrow);
+
+        // Another way:
+
+        var customersToDeliverToTomorrow2 = this.donutShop
+                .getCustomers()
+                .selectBy("Id in "
+                    + tomorrowsOrders.getLongColumn("CustomerId").toLongList().toSet().makeString("(", ", ", ")")
+                    )
+                .getStringColumn("Name").toList().toSet();
+
+        assertEquals(Sets.immutable.of("Carol", "Dave"), customersToDeliverToTomorrow2);
     }
 
     @Test
