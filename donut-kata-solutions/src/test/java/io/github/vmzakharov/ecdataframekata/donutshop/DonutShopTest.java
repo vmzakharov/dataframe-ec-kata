@@ -5,6 +5,7 @@ import io.github.vmzakharov.ecdataframe.dataframe.DfJoin;
 import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.impl.factory.primitive.DoubleLists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,13 +39,11 @@ public class DonutShopTest
         );
 
         this.donutShop.setMenu(new DataFrame("Menu")
-                .addStringColumn("Code").addStringColumn("Description").addDoubleColumn("Price").addDoubleColumn("DiscountPrice")
-                .addRow("BB", "Blueberry", 2.00, 1.75)
-                .addRow("GL", "Glazed", 1.50, 1.25)
-                .addRow("OF", "Old Fashioned", 1.50, 1.25)
-                .addRow("PS", "Pumpkin Spice", 2.00, 1.75)
-                .addRow("JL", "Jelly", 2.00, 1.75)
-                .addRow("AC", "Apple Cider", 1.50, 1.25)
+                .addStringColumn("Code", Lists.immutable.of("BB", "GL", "OF", "PS", "JL", "AC"))
+                .addStringColumn("Description", Lists.immutable.of("Blueberry", "Glazed", "Old Fashioned", "Pumpkin Spice", "Jelly", "Apple Cider"))
+                .addDoubleColumn("Price", DoubleLists.immutable.of(2.00, 1.50, 1.50, 2.00, 2.00, 1.50))
+                .addDoubleColumn("DiscountPrice", DoubleLists.immutable.of(1.75, 1.25, 1.25, 1.75, 1.75, 1.25))
+                .seal()
         );
 
         this.donutShop.setOrders(new DataFrame("Orders")
