@@ -57,8 +57,6 @@ public class DonutShop
         //   * Order Count
         //   * Min Price
         //   * Max Price
-        //
-        // Hint: Look at selectBy(), aggregate() and the AggregateFunction class
 
         return this.getOrdersWithPrices()
             .selectBy("DeliveryDate >= toDate('" + fromDate + "') and DeliveryDate <= toDate('" + toDate + "')")
@@ -78,11 +76,6 @@ public class DonutShop
         //  price for each order as follows:
         //  - if the quantity of a particular kind of donut is less than 10 then use the regular price to calculate the
         //  total, otherwise use the discount price
-        //
-        // Hint: look at the lookup() method and the DfJoin class, which defines lookup parameters.
-        // Look at the addDoubleColumn() method with the expression parameter to add a calculated value to a dataframe.
-        // It is possible that this method will be called more than once so use the hasColumn() method to check if
-        // calculated column has been added yet.
 
         if (!this.orders.hasColumn("TotalPrice"))
         {

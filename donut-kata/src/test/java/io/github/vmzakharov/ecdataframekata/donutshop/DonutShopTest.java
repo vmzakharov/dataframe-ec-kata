@@ -46,7 +46,7 @@ public class DonutShopTest
                 .addDoubleColumn("DiscountPrice", DoubleLists.immutable.of(1.75, 1.25, 1.25, 1.75, 1.75, 1.25))
                 .seal()
         );
-        
+
         this.donutShop.setOrders(new DataFrame("Orders")
                 .addLongColumn("CustomerId").addDateColumn("DeliveryDate").addStringColumn("DonutCode").addLongColumn("Count")
                 .addRow(1, this.today, "BB", 2)
