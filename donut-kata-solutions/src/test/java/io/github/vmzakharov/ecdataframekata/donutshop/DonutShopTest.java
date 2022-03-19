@@ -1,5 +1,6 @@
 package io.github.vmzakharov.ecdataframekata.donutshop;
 
+import io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction;
 import io.github.vmzakharov.ecdataframe.dataframe.DataFrame;
 import io.github.vmzakharov.ecdataframe.dataframe.DfJoin;
 import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
@@ -14,6 +15,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 
+import static io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction.same;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DonutShopTest
@@ -53,13 +55,13 @@ public class DonutShopTest
                 .addRow(1, this.today, "OF", 10)
 
                 .addRow(2, this.yesterday, "BB", 12)
-                .addRow(2, this.today, "PS", 12)
+                .addRow(2, this.today, "BB", 12)
 
                 .addRow(3, this.yesterday, "OF", 1)
                 .addRow(3, this.yesterday, "JL", 2)
                 .addRow(3, this.tomorrow, "OF", 10)
                 .addRow(3, this.tomorrow, "GL", 1)
-                .addRow(3, this.tomorrow, "BB", 12)
+                .addRow(3, this.tomorrow, "PS", 12)
 
                 .addRow(4, this.yesterday, "PS", 2)
                 .addRow(4, this.today, "OF", 12)
@@ -187,5 +189,31 @@ public class DonutShopTest
                         .addRow(2, "Jelly"),
                 popularity
         );
+    }
+
+    @Test
+    public void orderingTheUsual()
+    {
+        // TODO - find the clients that always order the same kind of donut. The result should be a data frame
+        //  containing two columns - the names of the clients and the type of donut they always order
+
+        DataFrame alwaysOrderSameThing = this.donutShop.getOrders()
+            .aggregateBy(Lists.immutable.of(same("DonutCode")), Lists.immutable.of("CustomerId"))
+            .selectBy("DonutCode is not null")
+            .lookup(DfJoin
+                    .to(this.donutShop.getCustomers())
+                    .match("CustomerId", "Id")
+                    .select("Name"))
+            .lookup(DfJoin
+                    .to(this.donutShop.getMenu())
+                    .match("DonutCode", "Code")
+                    .select("Description"))
+            .dropColumns(Lists.immutable.of("CustomerId", "DonutCode"));
+
+        DataFrameUtil.assertEquals(
+                new DataFrame("expected")
+                        .addStringColumn("Name").addStringColumn("Description")
+                        .addRow("Bob", "Blueberry"),
+                alwaysOrderSameThing);
     }
 }

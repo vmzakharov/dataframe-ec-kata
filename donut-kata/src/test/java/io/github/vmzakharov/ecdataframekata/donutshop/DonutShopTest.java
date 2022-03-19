@@ -1,8 +1,8 @@
 package io.github.vmzakharov.ecdataframekata.donutshop;
 
-import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
 import io.github.vmzakharov.ecdataframe.dataframe.DataFrame;
 import io.github.vmzakharov.ecdataframe.dataframe.DfJoin;
+import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.set.SetIterable;
@@ -15,7 +15,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DonutShopTest
 {
@@ -54,13 +54,13 @@ public class DonutShopTest
                 .addRow(1, this.today, "OF", 10)
 
                 .addRow(2, this.yesterday, "BB", 12)
-                .addRow(2, this.today, "PS", 12)
+                .addRow(2, this.today, "BB", 12)
 
                 .addRow(3, this.yesterday, "OF", 1)
                 .addRow(3, this.yesterday, "JL", 2)
                 .addRow(3, this.tomorrow, "OF", 10)
                 .addRow(3, this.tomorrow, "GL", 1)
-                .addRow(3, this.tomorrow, "BB", 12)
+                .addRow(3, this.tomorrow, "PS", 12)
 
                 .addRow(4, this.yesterday, "PS", 2)
                 .addRow(4, this.today, "OF", 12)
@@ -167,7 +167,7 @@ public class DonutShopTest
         // Hint - to add up donut counts look at the sumBy() method that takes two parameters - the columns to group by
         // and the columns to sum
         // use the lookup() method to add donut descriptions to the aggregated dataframe
-        // to get rid of the columns you don't need look at the dropColumn() method
+        // to get rid of the columns you don't need, look at the dropColumn() method
         // sortBy() or sorByExpression() method can come in handy when ordering a data frame
 
         DataFrame popularity = null;
@@ -181,5 +181,26 @@ public class DonutShopTest
                         .addRow(2, "Jelly"),
                 popularity
         );
+    }
+
+    public void orderingTheUsual()
+    {
+        // TODO - find the clients that always order the same kind of donut. The result should be a data frame
+        //        containing two columns - the names of the clients and the type of donut they always order
+        //
+        // Hint - aggregate the order data frame by customer, use the same() aggregation function on donuts they ordered
+        // same() for each aggregation group will return either the value that all the members of the group have if it
+        // is the same value, or null if the values are not the same
+        // use selectBy() to filter out the aggregate rows with the values that are nulls
+        // use the lookup() method to add donut descriptions and customer names to the dataframe
+        // to get rid of the columns you don't need, look at the dropColumn() method
+
+        DataFrame alwaysOrderSameThing = this.donutShop.getOrders();
+
+        DataFrameUtil.assertEquals(
+                new DataFrame("expected")
+                        .addStringColumn("Name").addStringColumn("Description")
+                        .addRow("Bob", "Blueberry"),
+                alwaysOrderSameThing);
     }
 }
