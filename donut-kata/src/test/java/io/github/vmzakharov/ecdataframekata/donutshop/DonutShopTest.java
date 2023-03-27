@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 
+import static io.github.vmzakharov.ecdataframe.dataframe.DfColumnSortOrder.DESC;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DonutShopTest
@@ -84,7 +85,7 @@ public class DonutShopTest
                 .match("CustomerId", "Id")
                 .select("Name")
                 )
-            .sortByExpression("-TotalPrice");
+            .sortBy(Lists.immutable.of("TotalPrice"), Lists.immutable.of(DESC));
 
         spendByCustomer.dropColumn("CustomerId");
 

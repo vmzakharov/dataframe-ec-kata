@@ -2,6 +2,7 @@ package io.github.vmzakharov.ecdataframekata.donutshop;
 
 import io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction;
 import io.github.vmzakharov.ecdataframe.dataframe.DataFrame;
+import io.github.vmzakharov.ecdataframe.dataframe.DfColumnSortOrder;
 import io.github.vmzakharov.ecdataframe.dataframe.DfJoin;
 import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
 import org.eclipse.collections.api.factory.Lists;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 
 import static io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction.same;
+import static io.github.vmzakharov.ecdataframe.dataframe.DfColumnSortOrder.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DonutShopTest
@@ -85,7 +87,7 @@ public class DonutShopTest
                 .match("CustomerId", "Id")
                 .select("Name")
                 )
-            .sortByExpression("-TotalPrice");
+            .sortBy(Lists.immutable.of("TotalPrice"), Lists.immutable.of(DESC));
 
         spendByCustomer.dropColumn("CustomerId");
 
@@ -173,21 +175,21 @@ public class DonutShopTest
         var donutCountByCode = this.donutShop.getOrders().sumBy(Lists.immutable.of("Count"), Lists.immutable.of("DonutCode"));
 
         var popularity = donutCountByCode.lookup(DfJoin
-                .to(this.donutShop.getMenu())
-                .match("DonutCode", "Code")
-                .select("Description")
+            .to(this.donutShop.getMenu())
+            .match("DonutCode", "Code")
+            .select("Description")
         );
 
-        popularity.dropColumn("DonutCode").sortByExpression("-Count");
+        popularity.dropColumn("DonutCode").sortByExpression("Count", DESC);
 
         DataFrameUtil.assertEquals(new DataFrame("Expected")
-                        .addLongColumn("Count").addStringColumn("Description")
-                        .addRow(43, "Old Fashioned")
-                        .addRow(26, "Blueberry")
-                        .addRow(14, "Pumpkin Spice")
-                        .addRow(5, "Glazed")
-                        .addRow(2, "Jelly"),
-                popularity
+                .addLongColumn("Count").addStringColumn("Description")
+                .addRow(43, "Old Fashioned")
+                .addRow(26, "Blueberry")
+                .addRow(14, "Pumpkin Spice")
+                .addRow(5, "Glazed")
+                .addRow(2, "Jelly"),
+            popularity
         );
     }
 

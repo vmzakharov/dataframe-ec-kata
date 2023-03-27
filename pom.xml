@@ -20,7 +20,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
-        <dataframe-ec.version>0.17.2</dataframe-ec.version>
+        <dataframe-ec.version>0.19.3</dataframe-ec.version>
     </properties>
 
     <dependencies>
