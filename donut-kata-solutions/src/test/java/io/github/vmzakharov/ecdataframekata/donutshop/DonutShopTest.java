@@ -89,6 +89,38 @@ public class DonutShopTest
                 )
             .sortBy(Lists.immutable.of("TotalPrice"), Lists.immutable.of(DESC));
 
+        // see the totalSpendPerCustomerFluent() test for a fluent API alternative to the join call above
+
+        spendByCustomer.dropColumn("CustomerId");
+
+        DataFrameUtil.assertEquals(
+                new DataFrame("Expected")
+                        .addDoubleColumn("TotalPrice").addStringColumn("Name")
+                        .addRow(42.0,"Bob")
+                        .addRow(40.5,"Carol")
+                        .addRow(31.5,"Dave")
+                        .addRow(22.5,"Alice"),
+                spendByCustomer
+        );
+    }
+
+    @Test
+    public void totalSpendPerCustomerFluent()
+    {
+        // TODO - find the total spend per customer. Create a data frame containing one row per each customer with two
+        //  columns: total price of all of their orders and the customer's name
+
+        var spendByCustomer = this.donutShop
+                .getOrdersWithPrices()
+                .sumBy(Lists.immutable.of("TotalPrice"), Lists.immutable.of("CustomerId"));
+
+        spendByCustomer
+                .lookupIn(this.donutShop.getCustomers())
+                .match("CustomerId", "Id")
+                .select("Name")
+                .resolveLookup() // executes the lookup join
+                .sortBy(Lists.immutable.of("TotalPrice"), Lists.immutable.of(DESC));
+
         spendByCustomer.dropColumn("CustomerId");
 
         DataFrameUtil.assertEquals(
