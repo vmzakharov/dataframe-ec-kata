@@ -184,6 +184,7 @@ public class DonutShopTest
         );
     }
 
+    @Test
     public void orderingTheUsual()
     {
         // TODO - find the clients that always order the same kind of donut. The result should be a data frame
