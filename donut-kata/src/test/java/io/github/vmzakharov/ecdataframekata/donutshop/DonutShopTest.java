@@ -14,7 +14,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 
+import static io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction.sum;
+import static io.github.vmzakharov.ecdataframe.dataframe.DfColumnSortOrder.ASC;
 import static io.github.vmzakharov.ecdataframe.dataframe.DfColumnSortOrder.DESC;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -73,7 +76,7 @@ public class DonutShopTest
     public void totalSpendPerCustomer()
     {
         // TODO - find the total spend per customer. Create a data frame containing one row per each customer with two
-        //  columns: total price of all of their orders and the customer's name
+        //        columns: total price of all of their orders and the customer's name
 
         var spendByCustomer = this.donutShop
                 .getOrdersWithPrices()
@@ -106,14 +109,14 @@ public class DonutShopTest
         // TODO - find the names of the customers with the deliveries scheduled for tomorrow
         //
         //  Hint: see selectBy() to filter orders matching a specific criteria
-        //  To get enrich the order data frame with customer names from the customers data frame joining by customer id.
+        //  To enrich the order data frame with customer names join it to the customers data frame by customer id.
         //  Then you can use toList() method on the column containing names to get a collection of names.
         //  To access this method see the get[Type]Column() methods on the DataFrame class.
         //  Note that the same person can have more than one order for the same day so mind the duplicates.
         //
         //  Alternatively, you can try finding the relevant customer ids in the data frame containing tomorrow's orders
         //  You then can filter rows in the customer data frame to only select the ones with ids matching those found in
-        //  the previous state, then you can get the values of the Name column from the resulting (filtered) data frame
+        //  the previous step, then you can get the values of the Name column from the resulting (filtered) data frame
         //
 
         var tomorrowsOrders = this.donutShop.getOrders();
@@ -204,5 +207,29 @@ public class DonutShopTest
                         .addStringColumn("Name").addStringColumn("Description")
                         .addRow("Bob", "Blueberry"),
                 alwaysOrderSameThing);
+    }
+
+    @Test
+    public void donutQtyByCustomerByDay()
+    {
+        // TODO - find out how many donuts each customer purchased on each day. The result should be a data frame with
+        //        customer ids in the first column. For the remaining columns, each column should have a string
+        //        representation of the date as its header and each row should contain the total number of donuts the
+        //        customer in that row bought on that date.
+        //
+        // Hint - look at the pivot() method on the DataFrame class. Look at the different versions of this method to
+        // change the column order in the resulting data frame.
+
+        DataFrame customerByDateSumQty = this.donutShop.getOrders();
+
+        DataFrameUtil.assertEquals(
+                new DataFrame("expected")
+                        .addLongColumn("CustomerId").addLongColumn(yesterday.toString()).addLongColumn(today.toString()).addLongColumn(tomorrow.toString())
+                        .addRow(1,  0, 16,  0)
+                        .addRow(2, 12, 12,  0)
+                        .addRow(3,  3,  0, 23)
+                        .addRow(4,  2, 12, 10),
+                customerByDateSumQty
+        );
     }
 }

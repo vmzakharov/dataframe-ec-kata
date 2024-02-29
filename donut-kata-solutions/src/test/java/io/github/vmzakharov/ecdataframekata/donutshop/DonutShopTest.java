@@ -1,8 +1,6 @@
 package io.github.vmzakharov.ecdataframekata.donutshop;
 
-import io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction;
 import io.github.vmzakharov.ecdataframe.dataframe.DataFrame;
-import io.github.vmzakharov.ecdataframe.dataframe.DfColumnSortOrder;
 import io.github.vmzakharov.ecdataframe.dataframe.DfJoin;
 import io.github.vmzakharov.ecdataframekata.util.DataFrameUtil;
 import org.eclipse.collections.api.factory.Lists;
@@ -17,7 +15,9 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 
 import static io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction.same;
-import static io.github.vmzakharov.ecdataframe.dataframe.DfColumnSortOrder.*;
+import static io.github.vmzakharov.ecdataframe.dataframe.AggregateFunction.sum;
+import static io.github.vmzakharov.ecdataframe.dataframe.DfColumnSortOrder.ASC;
+import static io.github.vmzakharov.ecdataframe.dataframe.DfColumnSortOrder.DESC;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DonutShopTest
@@ -249,5 +249,31 @@ public class DonutShopTest
                         .addStringColumn("Name").addStringColumn("Description")
                         .addRow("Bob", "Blueberry"),
                 alwaysOrderSameThing);
+    }
+
+    @Test
+    public void donutQtyByCustomerByDay()
+    {
+        // TODO - find out how many donuts each customer purchased on each day. The result should be a data frame with
+        //        customer ids in the first column. For the remaining columns, each column should have a string
+        //        representation of the date as its header and each row should contain the total number of donuts the
+        //        customer in that row bought on that date.
+
+        DataFrame customerByDateSumQty =
+                this.donutShop.getOrders()
+                              .pivot(Lists.immutable.of("CustomerId"),
+                                      "DeliveryDate", ASC,
+                                      Lists.immutable.of(sum("Count"))
+                              );
+
+        DataFrameUtil.assertEquals(
+                new DataFrame("expected")
+                        .addLongColumn("CustomerId").addLongColumn(yesterday.toString()).addLongColumn(today.toString()).addLongColumn(tomorrow.toString())
+                        .addRow(1,  0, 16,  0)
+                        .addRow(2, 12, 12,  0)
+                        .addRow(3,  3,  0, 23)
+                        .addRow(4,  2, 12, 10),
+                customerByDateSumQty
+        );
     }
 }
